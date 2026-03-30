@@ -14331,26 +14331,87 @@ window.WM_FIREBASE_CONFIG = {
     updateAccountBadge();
   }
 
+  function normalizePassageRecord(ps) {
+    if (!ps || typeof ps !== 'object') return null;
+    const id = ps.id || ('ps-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+    return {
+      id,
+      title: String(ps.title || '').trim(),
+      text: String(ps.text || '').trim(),
+      translation: String(ps.translation || ''),
+      vocabRequests: Array.isArray(ps.vocabRequests) ? ps.vocabRequests : [],
+      createdAt: ps.createdAt || new Date().toISOString(),
+      updatedAt: ps.updatedAt || ps.createdAt || new Date().toISOString(),
+      ownerUid: ps.ownerUid || currentUid || ''
+    };
+  }
+
+  function mergePassageSets(localArr, cloudArr) {
+    const map = new Map();
+    [...(Array.isArray(localArr) ? localArr : []), ...(Array.isArray(cloudArr) ? cloudArr : [])].forEach(raw => {
+      const ps = normalizePassageRecord(raw);
+      if (!ps || !ps.title || !ps.text) return;
+      const prev = map.get(ps.id);
+      if (!prev) {
+        map.set(ps.id, ps);
+        return;
+      }
+      const prevTime = new Date(prev.updatedAt || prev.createdAt || 0).getTime() || 0;
+      const nextTime = new Date(ps.updatedAt || ps.createdAt || 0).getTime() || 0;
+      map.set(ps.id, nextTime >= prevTime ? ps : prev);
+    });
+    return Array.from(map.values()).sort((a,b) => {
+      const at = new Date(a.updatedAt || a.createdAt || 0).getTime() || 0;
+      const bt = new Date(b.updatedAt || b.createdAt || 0).getTime() || 0;
+      return bt - at;
+    });
+  }
+
   async function cloudLoadPassages() {
-    if (!firebaseEnabled) return;
+    const localPassages = getPassageStore();
+    if (!firebaseEnabled) {
+      passages = localPassages;
+      return;
+    }
     try {
-      const snap = await fbDb.collection('passages').orderBy('createdAt','desc').get();
-      passages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let snap;
+      try {
+        snap = await fbDb.collection('passages').orderBy('updatedAt','desc').get();
+      } catch (orderErr) {
+        snap = await fbDb.collection('passages').get();
+      }
+      const cloudPassages = snap.docs.map(d => normalizePassageRecord({ id: d.id, ...d.data() })).filter(Boolean);
+      passages = mergePassageSets(localPassages, cloudPassages);
       savePassages();
-    } catch(e) { /* fallback to localStorage */ loadPassages(); }
+      if (currentUid) {
+        for (const ps of passages) {
+          if (!ps.ownerUid) {
+            ps.ownerUid = currentUid;
+            try { await fbDb.collection('passages').doc(ps.id).set(ps, { merge: true }); } catch (_) {}
+          }
+        }
+      }
+    } catch(e) {
+      passages = localPassages;
+      savePassages();
+    }
   }
 
   async function cloudSavePassage(ps) {
-    if (!firebaseEnabled || !currentUid) { savePassages(); return; }
+    const normalized = normalizePassageRecord({ ...ps, ownerUid: ps.ownerUid || currentUid || '' });
+    passages = mergePassageSets(passages, [normalized]);
+    savePassages();
+    if (!firebaseEnabled || !currentUid) return;
     try {
-      await fbDb.collection('passages').doc(ps.id).set(ps, { merge: true });
-      savePassages();
-    } catch(e) { savePassages(); }
+      await fbDb.collection('passages').doc(normalized.id).set(normalized, { merge: true });
+    } catch(e) { /* keep local copy */ }
   }
 
   async function cloudDeletePassage(id) {
-    if (!firebaseEnabled || !currentUid) { savePassages(); return; }
-    try { await fbDb.collection('passages').doc(id).delete(); savePassages(); } catch(e) { savePassages(); }
+    passages = passages.filter(p => p.id !== id);
+    savePassages();
+    if (!firebaseEnabled || !currentUid) return;
+    try { await fbDb.collection('passages').doc(id).delete(); } catch(e) { /* keep local deletion */ }
   }
 
   // Override passage functions to use Firebase
