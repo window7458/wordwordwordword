@@ -317,7 +317,7 @@ textarea.inp{resize:vertical;min-height:100px;line-height:1.6;}
 <script>
 const WORDS={"1":[{en:"diligent",kr:"부지런한, 근면한"},{en:"generous",kr:"관대한, 후한"},{en:"creative",kr:"창의적인"},{en:"modest",kr:"겸손한, 적당한"},{en:"active",kr:"활동적인, 적극적인"},{en:"passive",kr:"수동적인"},{en:"arrogant",kr:"오만한, 거만한"},{en:"selfish",kr:"이기적인"},{en:"honest",kr:"정직한, 솔직한"},{en:"polite",kr:"예의 바른, 공손한"},{en:"impolite",kr:"무례한"},{en:"strict",kr:"엄격한, 엄한"},{en:"patient",kr:"참을성 있는; 환자"},{en:"impatient",kr:"참을성 없는, 성급한"},{en:"brave",kr:"용감한"},{en:"timid",kr:"겁이 많은, 소심한"},{en:"wise",kr:"지혜로운, 현명한"},{en:"foolish",kr:"어리석은"},{en:"gentle",kr:"온화한, 부드러운"},{en:"harsh",kr:"가혹한, 거친"}],"2":[{en:"assignment",kr:"과제, 숙제, 임무"},{en:"attendance",kr:"출석, 참석"},{en:"certificate",kr:"증명서, 자격증"},{en:"curriculum",kr:"교육 과정"},{en:"degree",kr:"학위; 도, 정도"},{en:"diploma",kr:"졸업장, 수료증"},{en:"discipline",kr:"규율, 훈육, 절제력"},{en:"elementary",kr:"초보의, 기본적인"},{en:"enroll",kr:"등록하다, 입학시키다"},{en:"evaluate",kr:"평가하다"},{en:"faculty",kr:"교수진; 능력"},{en:"institute",kr:"기관, 협회; 도입하다"},{en:"instructor",kr:"강사, 지도자"},{en:"lecture",kr:"강의; 강의하다"},{en:"major",kr:"주요한; 전공하다"},{en:"minor",kr:"사소한; 미성년자"},{en:"objective",kr:"객관적인; 목표"},{en:"principal",kr:"교장; 주요한"},{en:"register",kr:"등록하다; 등록부"},{en:"scholarship",kr:"장학금; 학식"}],"3":[{en:"acquaintance",kr:"지인, 아는 사람"},{en:"anniversary",kr:"기념일"},{en:"associate",kr:"연상하다; 동료"},{en:"banquet",kr:"연회, 만찬"},{en:"companion",kr:"동료, 동반자"},{en:"conflict",kr:"갈등, 충돌; 충돌하다"},{en:"cooperate",kr:"협력하다"},{en:"diverse",kr:"다양한, 다른"},{en:"encounter",kr:"마주치다; 만남"},{en:"harmony",kr:"조화, 화합"},{en:"intimate",kr:"친밀한, 사적인"},{en:"loyalty",kr:"충성, 충실"},{en:"marriage",kr:"결혼, 혼인"},{en:"neighbor",kr:"이웃"},{en:"partner",kr:"동반자, 파트너"},{en:"relationship",kr:"관계, 연관"},{en:"respect",kr:"존경하다; 측면"},{en:"rival",kr:"경쟁자, 라이벌"},{en:"sympathy",kr:"동정, 공감"},{en:"trust",kr:"신뢰하다; 신뢰"}]};
 const BUILTIN_BOOKS=[{id:'wordmaster-basic',title:'Word Master BASIC (샘플 Day 1~3)',days:WORDS,themes:{},isBase:true}];
-const TEACHER_PASSWORD='windowbreaker';const BASE_BOOK_ID='wordmaster-basic';
+const TEACHER_UID='gfedbKqE30VwTDfls7cfiGwaD982';const BASE_BOOK_ID='wordmaster-basic';
 let role='student',activeUsername='',currentUid='',currentEmail='';
 let weakWords=[],submissions=[],studentSubmissions=[],generatedExams=[];
 let customBooks=[],currentBookId=BASE_BOOK_ID,examResults=[];
@@ -330,6 +330,8 @@ let currentExamCode=null,examIndex=0,examCountdown=40,examTimer=null,currentExam
 let unsubPassages=null,unsubHomeworks=null;
 let fbApp=null,fbAuth=null,fbDb=null,firebaseEnabled=false;
 
+function isTeacherAccount(){return !!currentUid&&currentUid===TEACHER_UID;}
+function resolveRoleByUid(){return isTeacherAccount()?'teacher':'student';}
 let wmCurrentTab='login';
 function wmTab(t){wmCurrentTab=t;document.getElementById('wm-tab-login').classList.toggle('on',t==='login');document.getElementById('wm-tab-signup').classList.toggle('on',t==='signup');document.getElementById('wm-btn').textContent=t==='signup'?'회원가입':'로그인';wmClear();}
 function wmClear(){const el=document.getElementById('wm-msg');if(el){el.textContent='';el.className='wm-msg';}}
@@ -350,19 +352,42 @@ function makeEmail(id){if(id.includes('@'))return id.toLowerCase();return id.toL
 function makeUsername(email){return email&&email.endsWith('@wordtest.local')?email.replace(/@wordtest\.local$/,''):email;}
 function showOverlay(){document.getElementById('wm-overlay').style.display='flex';const btn=document.getElementById('wm-btn');if(btn){btn.disabled=false;btn.textContent='로그인';}wmClear();wmAutoBar(false);}
 function hideOverlay(){document.getElementById('wm-overlay').style.display='none';}
-function showRoleSelect(){document.getElementById('login-screen').style.display='flex';}
+function showRoleSelect(){
+  const screen=document.getElementById('login-screen');
+  if(!screen)return;
+  screen.style.display='flex';
+  const teacherCard=screen.querySelector('.role-card.teacher');
+  const studentCard=screen.querySelector('.role-card.student');
+  if(teacherCard) teacherCard.style.display=isTeacherAccount()?'':'none';
+  if(studentCard) studentCard.style.display=isTeacherAccount()?'none':'';
+}
 function hideRoleSelect(){document.getElementById('login-screen').style.display='none';}
-async function enterApp(r){if(r==='teacher'){const pw=prompt('선생님 비밀번호');if(pw!==TEACHER_PASSWORD){alert('비밀번호 오류');return;}}role=r;hideRoleSelect();document.getElementById('app').style.display='flex';const badge=document.getElementById('role-badge');badge.textContent=r==='student'?'학생':'선생님';badge.className='topbar-role '+(r==='student'?'role-student':'role-teacher');updateAccountBadge();await loadAllData();buildNav();}
+async function enterApp(r){
+  const resolved = resolveRoleByUid();
+  if(r==='teacher' && !isTeacherAccount()){
+    alert('선생님 계정으로 로그인한 경우에만 선생님 화면을 사용할 수 있습니다.');
+    return;
+  }
+  role = resolved;
+  hideRoleSelect();
+  document.getElementById('app').style.display='flex';
+  const badge=document.getElementById('role-badge');
+  badge.textContent=role==='student'?'학생':'선생님';
+  badge.className='topbar-role '+(role==='student'?'role-student':'role-teacher');
+  updateAccountBadge();
+  await loadAllData();
+  buildNav();
+}
 function goLogin(){clearExamTimer();unsubAll();document.getElementById('app').style.display='none';hideRoleSelect();showOverlay();}
 async function logoutAccount(){if(!confirm('로그아웃 하시겠습니까?'))return;unsubAll();if(firebaseEnabled&&fbAuth)await fbAuth.signOut();currentUid='';currentEmail='';activeUsername='';weakWords=[];submissions=[];studentSubmissions=[];generatedExams=[];customBooks=[];currentBookId=BASE_BOOK_ID;examResults=[];passages=[];homeworks=[];hwDoneSet=new Set();updateAccountBadge();document.getElementById('app').style.display='none';hideRoleSelect();showOverlay();}
-function updateAccountBadge(){const el=document.getElementById('account-badge');if(el)el.textContent=activeUsername||'';}
+function updateAccountBadge(){const el=document.getElementById('account-badge');if(el){el.textContent=activeUsername||'';el.title=currentUid||'';}}
 function unsubAll(){if(unsubPassages){unsubPassages();unsubPassages=null;}if(unsubHomeworks){unsubHomeworks();unsubHomeworks=null;}}
 function subscribePassages(){if(!firebaseEnabled||!fbDb)return;if(unsubPassages)unsubPassages();unsubPassages=fbDb.collection('passages').orderBy('updatedAt','desc').onSnapshot(snap=>{passages=snap.docs.map(d=>({id:d.id,...d.data()}));if(document.getElementById('page-passage')?.classList.contains('active'))renderPassagePage();if(document.getElementById('page-passage-teacher')?.classList.contains('active'))renderPassageTeacherPage();},err=>console.warn('passages:',err));}
 function subscribeHomeworks(){if(!firebaseEnabled||!fbDb)return;if(unsubHomeworks)unsubHomeworks();unsubHomeworks=fbDb.collection('homeworks').orderBy('createdAt','desc').onSnapshot(snap=>{homeworks=snap.docs.map(d=>({id:d.id,...d.data()}));if(document.getElementById('page-homework')?.classList.contains('active'))renderHomeworkPage();if(document.getElementById('page-homework-teacher')?.classList.contains('active'))renderHomeworkTeacherPage();},err=>console.warn('homeworks:',err));}
 async function loadAllData(){if(!firebaseEnabled||!currentUid)return;await Promise.all([loadBooks(),loadProfile(),loadGeneratedExams(),loadSubmissions(),loadStudentSubmissions()]);subscribePassages();subscribeHomeworks();}
 async function loadBooks(){if(!fbDb)return;try{const snap=await fbDb.collection('books').get();customBooks=snap.docs.map(d=>({...d.data(),id:d.data().id||d.id,isBase:false}));}catch(e){console.warn('loadBooks:',e);}}
 async function loadProfile(){if(!fbDb||!currentUid)return;try{const doc=await fbDb.collection('profiles').doc(currentUid).get();if(doc.exists){const d=doc.data()||{};weakWords=Array.isArray(d.weakWords)?d.weakWords:[];examResults=Array.isArray(d.examResults)?d.examResults:[];currentBookId=d.currentBookId||BASE_BOOK_ID;hwDoneSet=new Set(Array.isArray(d.hwDone)?d.hwDone:[]);}}catch(e){console.warn('loadProfile:',e);}}
-async function saveProfile(){if(!fbDb||!currentUid)return;try{await fbDb.collection('profiles').doc(currentUid).set({email:currentEmail,username:activeUsername,weakWords:weakWords||[],examResults:examResults||[],currentBookId:currentBookId||BASE_BOOK_ID,hwDone:[...hwDoneSet],updatedAt:new Date().toISOString()},{merge:true});}catch(e){console.warn('saveProfile:',e);}}
+async function saveProfile(){if(!fbDb||!currentUid)return;try{await fbDb.collection('profiles').doc(currentUid).set({email:currentEmail,username:activeUsername,weakWords:weakWords||[],examResults:examResults||[],currentBookId:currentBookId||BASE_BOOK_ID,hwDone:[...hwDoneSet],isTeacher:isTeacherAccount(),updatedAt:new Date().toISOString()},{merge:true});}catch(e){console.warn('saveProfile:',e);}}
 async function loadGeneratedExams(){if(!fbDb||!currentUid)return;try{const snap=await fbDb.collection('exams').where('ownerUid','==',currentUid).get();generatedExams=snap.docs.map(d=>({...d.data(),code:d.id}));generatedExams.sort((a,b)=>String(b.created||'').localeCompare(String(a.created||'')));}catch(e){console.warn('loadExams:',e);}}
 async function loadSubmissions(){if(!fbDb||!currentUid)return;try{const snap=await fbDb.collection('submissions').where('teacherUid','==',currentUid).get();submissions=snap.docs.map(d=>({...d.data(),_docId:d.id}));submissions.sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')));}catch(e){console.warn('loadSubs:',e);}}
 async function loadStudentSubmissions(){if(!fbDb||!currentUid)return;try{const snap=await fbDb.collection('submissions').where('studentUid','==',currentUid).get();studentSubmissions=snap.docs.map(d=>({...d.data(),_docId:d.id}));studentSubmissions.sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')));}catch(e){console.warn('loadStudentSubs:',e);}}
@@ -460,7 +485,32 @@ function startTimer(){clearExamTimer();examCountdown=40;const el=document.getEle
 function submitAns(skip=false,timeout=false){clearExamTimer();const inp=document.getElementById('e-inp');const raw=skip||timeout?'':(inp&&inp.value)||'';examAnswers[examIndex].val=raw;if(examIndex>=examWords.length-1)finishExam();else{examIndex++;renderRunner();}}
 function finishExam(){clearExamTimer();examWords.forEach((w,i)=>{const ans=(examAnswers[i].val||'').trim();if(!ans)examAnswers[i].result='empty';else if(isMeaningCorrect(ans,w.kr||''))examAnswers[i].result='correct';else examAnswers[i].result='wrong';});const{correct,wrong,empty,score}=summarizeAnswers(examAnswers);renderResult(score,correct,wrong,empty);}
 function renderResult(score,correct,wrong,empty){const p=document.getElementById('page-exam');const pass=score>=60;const dayStr=examDays.map(getDayLabel).join(', ');const now=new Date().toLocaleString('ko-KR');p.innerHTML=`<div class="content"><div class="section-title">시험 <span>결과</span></div><div class="result-hero"><div class="result-score ${pass?'pass':'fail'}">${score}점</div><div style="color:var(--text2);font-size:.85rem;margin-top:.5rem;">${eh(examStudentName)} · ${eh(dayStr)} · ${now}</div><div style="margin-top:.75rem;">${correct}개 정답 · ${wrong}개 오답 · ${empty}개 미응답 / 총 ${examWords.length}</div><div class="result-review-note">📝 임시 채점입니다. 선생님이 최종 수정할 수 있습니다.</div></div><div class="result-list">${examWords.map((w,i)=>{const r=examAnswers[i].result;return `<div class="result-row ${r}"><div class="result-num">${String(i+1).padStart(2,'0')}</div><div class="result-word">${eh(w.en)}</div><div style="color:${r==='correct'?'var(--accent)':r==='wrong'?'var(--accent2)':'var(--text3)'};">${eh(examAnswers[i].val||'(미응답)')}</div><div style="color:var(--text2);font-size:.8rem;">기준: ${eh(w.kr||'')}</div></div>`;}).join('')}</div><div style="padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);"><div id="submit-status">${currentExamCode?'선생님께 자동 제출 중...':'연습 시험은 자동 제출되지 않습니다.'}</div></div><button class="btn" style="margin-top:.75rem;" onclick="renderStudentExam()">← 처음으로</button></div>`;if(currentExamCode)autoSubmit(score,correct,wrong,empty);}
-async function autoSubmit(score,correct,wrong,empty){if(!firebaseEnabled||!fbDb){setEl('submit-status','Firebase 연결 필요');return;}const sub={name:examStudentName||activeUsername,studentUid:currentUid,studentEmail:currentEmail,score,correct,wrong,empty,total:examWords.length,days:examDays,code:currentExamCode,teacherUid:currentExamOwnerUid||null,bookTitle:examWords[0]?.bookTitle||getCurrentBook().title,timestamp:new Date().toISOString(),reviewPending:true,answers:examWords.map((w,i)=>({word:w.en,kr:w.kr,student:examAnswers[i].val||'',result:examAnswers[i].result,dayKey:w.dayKey||''}))};try{const ref=await fbDb.collection('submissions').add(sub);studentSubmissions.unshift({...sub,_docId:ref.id});setEl('submit-status',`✅ 자동 제출 완료 · 임시 ${score}점 · 선생님이 최종 채점합니다.`);}catch(e){setEl('submit-status','제출 실패: '+e.message);}}
+async function autoSubmit(score,correct,wrong,empty){
+  if(!firebaseEnabled||!fbDb){setEl('submit-status','Firebase 연결 필요');return;}
+  const sub={
+    name:examStudentName||activeUsername,
+    studentUid:currentUid,
+    studentEmail:currentEmail,
+    score,correct,wrong,empty,
+    total:examWords.length,
+    days:examDays,
+    code:currentExamCode,
+    teacherUid:currentExamOwnerUid||TEACHER_UID,
+    bookTitle:examWords[0]?.bookTitle||getCurrentBook().title,
+    timestamp:new Date().toISOString(),
+    reviewPending:true,
+    answers:examWords.map((w,i)=>({word:w.en,kr:w.kr,student:examAnswers[i].val||'',result:examAnswers[i].result,dayKey:w.dayKey||''}))
+  };
+  try{
+    const docId=`${currentExamCode||'exam'}_${currentUid}`;
+    await fbDb.collection('submissions').doc(docId).set(sub,{merge:true});
+    const existingIdx=studentSubmissions.findIndex(x=>x._docId===docId);
+    const payload={...sub,_docId:docId};
+    if(existingIdx>=0) studentSubmissions[existingIdx]=payload;
+    else studentSubmissions.unshift(payload);
+    setEl('submit-status',`✅ 자동 제출 완료 · 임시 ${score}점 · 선생님이 최종 채점합니다.`);
+  }catch(e){setEl('submit-status','제출 실패: '+e.message);}
+}
 
 function renderTeacherInbox(){const p=document.getElementById('page-teacher-inbox');if(!p)return;p.innerHTML=`<div class="content"><div class="section-title">제출함 <span>(${submissions.length})</span></div><div style="display:flex;justify-content:flex-end;margin-bottom:1rem;"><button class="btn" onclick="loadSubmissions().then(renderTeacherInbox)">새로고침</button></div>${!submissions.length?'<div class="empty-state"><div class="empty-icon">📬</div>제출된 결과가 없습니다.</div>':''}<div class="inbox-list">${submissions.slice().reverse().map((s,ri)=>{const idx=submissions.length-1-ri;const pass=s.score>=60;return `<div class="inbox-item" onclick="openSub(${idx})"><div class="inbox-item-header"><div class="inbox-name">${eh(s.name)} ${s.reviewPending?'🕒':'✅'}</div><div class="inbox-score ${pass?'pass':'fail'}">${s.score}점</div></div><div class="inbox-meta">${eh(s.bookTitle||'')} · ${(s.days||[]).map(getDayLabel).join(', ')} · ${s.correct}/${s.total} · ${new Date(s.timestamp).toLocaleString('ko-KR')} ${s.code?'· '+s.code:''}</div></div>`;}).join('')}</div>${submissions.length?`<button class="btn danger" style="margin-top:1.25rem;" onclick="clearSubs()">제출 기록 초기화</button>`:''}</div>`;}
 function openSub(idx){const s=submissions[idx];if(!s)return;const mc=document.getElementById('modal-content');const pass=s.score>=60;mc.innerHTML=`<h2>${eh(s.name)}님 시험 결과</h2><div class="review-summary-grid"><div class="review-summary-card"><div style="font-size:2rem;font-weight:800;color:${pass?'var(--accent3)':'var(--accent2)'};">${s.score}점</div></div><div class="review-summary-card"><div style="font-size:1.5rem;font-weight:800;color:var(--accent);">${s.correct}</div><div style="font-size:.75rem;color:var(--text2);">정답</div></div><div class="review-summary-card"><div style="font-size:1.5rem;font-weight:800;color:var(--accent2);">${s.wrong}</div><div style="font-size:.75rem;color:var(--text2);">오답</div></div></div><div class="result-review-note">문항을 클릭해서 정답/오답을 수정할 수 있습니다.</div><div class="result-list">${(s.answers||[]).map((a,i)=>`<div class="result-row ${a.result}"><div class="result-num">${String(i+1).padStart(2,'0')}</div><div style="flex:1;"><div class="result-word">${eh(a.word)}</div><div style="font-size:.8rem;color:var(--text2);">기준: ${eh(a.kr||'')}</div><div style="font-size:.88rem;margin-top:.25rem;">학생 답: <strong>${eh(a.student||'(미응답)')}</strong></div><div class="review-chip-row"><button class="review-chip${a.result==='correct'?' active correct':''}" onclick="setR(${idx},${i},'correct')">정답</button><button class="review-chip${a.result==='wrong'?' active wrong':''}" onclick="setR(${idx},${i},'wrong')">오답</button><button class="review-chip${a.result==='empty'?' active empty':''}" onclick="setR(${idx},${i},'empty')">미응답</button></div></div></div>`).join('')}</div>`;document.getElementById('modal-overlay').classList.add('show');}
@@ -487,10 +537,32 @@ window.WM_FIREBASE_CONFIG={apiKey:"AIzaSyDRXpHtMbbLg5_zHn9DHclOQNacYWC1bFk",auth
     if(user){
       currentUid=user.uid;currentEmail=user.email||'';
       activeUsername=makeUsername(currentEmail);
+      role = resolveRoleByUid();
+      try{
+        await fbDb.collection('profiles').doc(currentUid).set({
+          email: currentEmail,
+          username: activeUsername,
+          isTeacher: isTeacherAccount(),
+          updatedAt: new Date().toISOString()
+        }, {merge:true});
+      }catch(e){
+        console.warn('profile bootstrap failed:', e);
+      }
       updateAccountBadge();
       wmAutoBar(true,`${activeUsername}님 자동 로그인 중...`);
-      hideOverlay();showRoleSelect();
-    }else{wmAutoBar(false);}
+      hideOverlay();
+      hideRoleSelect();
+      document.getElementById('app').style.display='flex';
+      const badge=document.getElementById('role-badge');
+      badge.textContent=role==='student'?'학생':'선생님';
+      badge.className='topbar-role '+(role==='student'?'role-student':'role-teacher');
+      await loadAllData();
+      buildNav();
+    }else{
+      wmAutoBar(false);
+      document.getElementById('app').style.display='none';
+      hideRoleSelect();
+    }
   });
 })();
 </script>
