@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Word Master Mobile</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f2f4f6; /* 토스풍 라이트 그레이 */
+  --surface: #ffffff;
+  --accent: #3182f6; /* 토스 블루 */
+  --accent-light: #e8f3ff;
+  --text: #191f28;
+  --text2: #4e5968;
+  --text3: #8b95a1;
+  --border: #eceef0;
+  --red: #f04452;
+  --r: 24px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans KR', sans-serif; }
+body { background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.4; }
+
+/* 모바일 전용 컨테이너 (데스크탑에서도 모바일처럼 보임) */
+#app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--surface); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+
+/* Header */
+.header { height: 60px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); }
+.brand { font-family: 'Outfit'; font-weight: 900; font-size: 1.2rem; color: var(--accent); }
+
+/* Bottom Nav */
+.nav { height: 70px; display: flex; background: var(--surface); border-top: 1px solid var(--border); position: sticky; bottom: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; color: var(--text3); font-size: 0.7rem; font-weight: 700; transition: 0.2s; }
+.nav-item.on { color: var(--accent); }
+.nav-icon { font-size: 1.4rem; }
+
+/* Main Content */
+#content { flex: 1; padding: 20px; padding-bottom: 40px; }
+
+/* UI Components */
+.card { background: var(--surface); border-radius: var(--r); padding: 20px; margin-bottom: 12px; border: 1px solid var(--border); transition: 0.2s; }
+.card.clickable:active { transform: scale(0.98); background: #f9fafb; }
+.btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-p { background: var(--accent); color: #fff; }
+.btn-g { background: var(--accent-light); color: var(--accent); }
+.btn-outline { background: none; border: 1.5px solid var(--border); color: var(--text2); }
+
+.inp { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: #f9fafb; font-size: 0.95rem; margin-bottom: 10px; }
+.inp:focus { outline: none; border-color: var(--accent); background: #fff; }
+
+.chip { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; background: var(--bg); color: var(--text3); }
+.chip.blue { background: var(--accent-light); color: var(--accent); }
+
+/* Login Overlay */
+#login-ov { position: fixed; inset: 0; background: #fff; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+
+/* Study Mode Styles */
+.study-line { margin-bottom: 10px; cursor: pointer; border-left: 4px solid var(--border); padding-left: 15px; }
+.study-line.on { border-left-color: var(--accent); }
+.blurred { filter: blur(5px); background: #eee; color: transparent !important; user-select: none; border-radius: 4px; }
+.en-txt { font-weight: 700; font-size: 1.1rem; color: var(--text); margin-bottom: 4px; transition: 0.3s; }
+.kr-txt { font-size: 0.9rem; color: var(--text3); transition: 0.3s; }
+
+/* Modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: flex-end; }
+.modal { background: #fff; width: 100%; border-radius: 24px 24px 0 0; padding: 30px 20px; transform: translateY(100%); transition: 0.3s; max-height: 80vh; overflow-y: auto; }
+.modal.show { transform: translateY(0); }
+
+/* Checklist for assignments */
+.check-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.check-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px; background: #f9fafb; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="login-ov">
+  <div style="font-size: 4rem; margin-bottom: 20px;">🎒</div>
+  <h1 style="font-family:'Outfit'; font-weight:900; font-size:2rem; margin-bottom:5px;">Word<span style="color:var(--accent)">Master</span></h1>
+  <p style="color:var(--text3); margin-bottom:40px;">나만을 위한 영어 학습 파트너</p>
+  <input class="inp" id="wid" placeholder="아이디">
+  <input class="inp" id="wpw" type="password" placeholder="비밀번호">
+  <button class="btn btn-p" onclick="doAuth()" style="margin-top:20px;">시작하기</button>
+</div>
+
+<div id="app" style="display:none;">
+  <header class="header">
+    <div class="brand">WordMaster</div>
+    <div id="user-info" style="font-size: 0.8rem; font-weight: 700;"></div>
+  </header>
+
+  <main id="content"></main>
+
+  <nav class="nav" id="main-nav"></nav>
+</div>
+
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+<script>
+// --- CONFIG & STATE ---
+const TID = 'gfedbKqE30VwTDfls7cfiGwaD982';
+const FBCFG = {apiKey: "AIzaSyDRXpHtMbbLg5_zHn9DHclOQNacYWC1bFk", authDomain: "word-test-4cdf6.firebaseapp.com", projectId: "word-test-4cdf6", storageBucket: "word-test-4cdf6.firebasestorage.app", messagingSenderId: "175982857143", appId: "1:175982857143:web:2aae221a1e051c197ab632"};
+firebase.initializeApp(FBCFG);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let user = null, role = 'student';
+let students = [], passages = [], curPs = null, studyMode = 'all';
+
+// --- AUTH ---
+auth.onAuthStateChanged(async u => {
+  if(u) {
+    user = u;
+    role = (u.uid === TID) ? 'teacher' : 'student';
+    document.getElementById('login-ov').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('user-info').textContent = u.email.split('@')[0];
+    
+    // 데이터 리스너 시작
+    initListeners();
+    renderNav();
+    goPage(role === 'teacher' ? 'ps-t' : 'ps-s');
+  }
+});
+
+async function doAuth() {
+  const id = document.getElementById('wid').value.trim();
+  const pw = document.getElementById('wpw').value.trim();
+  if(!id || !pw) return alert("입력해주세요!");
+  const email = id.includes('@') ? id : id + "@wordtest.local";
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+  } catch(e) {
+    try { await auth.createUserWithEmailAndPassword(email, pw); } 
+    catch(e2) { alert(e2.message); }
+  }
+}
+
+function initListeners() {
+  db.collection('profiles').onSnapshot(s => {
+    students = s.docs.map(d => ({id: d.id, ...d.data()})).filter(x => x.id !== TID);
+  });
+  db.collection('passages').onSnapshot(s => {
+    passages = s.docs.map(d => ({id: d.id, ...d.data()}));
+    // 현재 페이지 리프레시
+    if(curPage === 'ps-s') renderPsStudent();
+    if(curPage === 'ps-t') renderPsTeacher();
+  });
+}
+
+// --- NAVIGATION ---
+let curPage = '';
+function renderNav() {
+  const nav = document.getElementById('main-nav');
+  const items = role === 'teacher' ? 
+    [{id:'ps-t', i:'📚', l:'본문관리'}, {id:'stu', i:'👥', l:'학생들'}] :
+    [{id:'ps-s', i:'📖', l:'나의학습'}, {id:'exam', i:'✏️', l:'시험'}];
+  
+  nav.innerHTML = items.map(it => `
+    <div class="nav-item ${curPage === it.id ? 'on' : ''}" onclick="goPage('${it.id}')">
+      <span class="nav-icon">${it.i}</span>
+      <span>${it.l}</span>
+    </div>
+  `).join('');
+}
+
+function goPage(id) {
+  curPage = id;
+  renderNav();
+  const content = document.getElementById('content');
+  if(id === 'ps-t') renderPsTeacher();
+  if(id === 'ps-s') renderPsStudent();
+  if(id === 'stu') content.innerHTML = `<div class="card">학생 관리 기능은 준비 중입니다.</div>`;
+  if(id === 'exam') content.innerHTML = `<div class="card">시험 기능은 준비 중입니다.</div>`;
+}
+
+// --- TEACHER: PASSAGE MGMT ---
+function renderPsTeacher() {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <h2 style="font-weight:900; margin-bottom:20px;">본문 관리</h2>
+    <button class="btn btn-g" onclick="openPsEditor()" style="margin-bottom:20px;">+ 새 본문 추가</button>
+    ${passages.map(p => `
+      <div class="card clickable" onclick="openPsEditor('${p.id}')">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="font-weight:800; font-size:1.1rem;">${p.title}</div>
+            <div style="font-size:0.75rem; color:var(--text3); margin-top:4px;">${p.assignedTo === 'all' ? '전체 공개' : (p.assignedTo?.length || 0) + '명에게 지정'}</div>
+          </div>
+          <button class="btn" style="width:40px; padding:8px;" onclick="event.stopPropagation(); deletePs('${p.id}')">🗑️</button>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function openPsEditor(id = null) {
+  const p = passages.find(x => x.id === id) || {title:'', text:'', translation:'', assignedTo: 'all'};
+  const isAll = p.assignedTo === 'all';
+  const assignedSet = new Set(isAll ? [] : (p.assignedTo || []));
+
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <h3 style="margin-bottom:20px;">${id ? '본문 수정' : '새 본문 추가'}</h3>
+    <input class="inp" id="ed-title" value="${p.title}" placeholder="제목">
+    <textarea class="inp" id="ed-text" style="height:120px;" placeholder="영어 지문 (문장별 엔터)">${p.text}</textarea>
+    <textarea class="inp" id="ed-trans" style="height:120px;" placeholder="한글 해석 (영어 문장과 순서 맞게)">${p.translation}</textarea>
+    
+    <div style="margin:20px 0;">
+      <p style="font-weight:800; font-size:0.9rem; margin-bottom:10px;">학생 지정</p>
+      <div class="check-list">
+        <label class="check-item">
+          <input type="checkbox" id="chk-all" ${isAll?'checked':''} onchange="toggleAllStus(this.checked)"> 전체 학생 공개
+        </label>
+        <div id="stu-selection" style="display:${isAll?'none':'block'}; max-height:150px; overflow-y:auto;">
+          ${students.map(s => `
+            <label class="check-item">
+              <input type="checkbox" class="stu-chk" value="${s.id}" ${assignedSet.has(s.id)?'checked':''}> ${s.displayName || s.email.split('@')[0]}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-p" onclick="savePs('${id}')">저장하기</button>
+    </div>
+  `;
+  openModal();
+}
+
+function toggleAllStus(isAll) {
+  document.getElementById('stu-selection').style.display = isAll ? 'none' : 'block';
+}
+
+async function savePs(id) {
+  const title = document.getElementById('ed-title').value.trim();
+  const text = document.getElementById('ed-text').value.trim();
+  const translation = document.getElementById('ed-trans').value.trim();
+  const isAll = document.getElementById('chk-all').checked;
+  let assignedTo = 'all';
+  if(!isAll) {
+    assignedTo = Array.from(document.querySelectorAll('.stu-chk:checked')).map(cb => cb.value);
+  }
+
+  const data = { title, text, translation, assignedTo, updatedAt: new Date().toISOString() };
+  if(id === 'null' || !id) await db.collection('passages').add(data);
+  else await db.collection('passages').doc(id).update(data);
+  closeModal();
+}
+
+async function deletePs(id) {
+  if(confirm("삭제하시겠습니까?")) await db.collection('passages').doc(id).delete();
+}
+
+// --- STUDENT: STUDY ---
+function renderPsStudent() {
+  const content = document.getElementById('content');
+  // 나에게 지정된 본문만 필터링
+  const myPassages = passages.filter(p => p.assignedTo === 'all' || (Array.isArray(p.assignedTo) && p.assignedTo.includes(user.uid)));
+
+  content.innerHTML = `
+    <h2 style="font-weight:900; margin-bottom:20px;">나의 학습 지문</h2>
+    ${myPassages.length === 0 ? '<div class="card" style="color:var(--text3); text-align:center;">배정된 본문이 없습니다.</div>' : ''}
+    ${myPassages.map(p => `
+      <div class="card clickable" onclick="startStudy('${p.id}')">
+        <div class="chip blue" style="margin-bottom:8px; display:inline-block;">Reading</div>
+        <div style="font-weight:800; font-size:1.15rem;">${p.title}</div>
+        <div style="font-size:0.85rem; color:var(--text3); margin-top:6px; line-height:1.2;">${p.text.slice(0, 60)}...</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function startStudy(id) {
+  curPs = passages.find(x => x.id === id);
+  renderStudyPage();
+}
+
+function renderStudyPage() {
+  const content = document.getElementById('content');
+  const enLines = curPs.text.split('\n').filter(l => l.trim());
+  const krLines = (curPs.translation || '').split('\n').filter(l => l.trim());
+
+  content.innerHTML = `
+    <div style="margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+      <button onclick="goPage('ps-s')" style="background:none; border:none; font-size:1.2rem;">←</button>
+      <h2 style="font-weight:900;">${curPs.title}</h2>
+    </div>
+
+    <div style="display:flex; overflow-x:auto; gap:8px; margin-bottom:20px; padding-bottom:5px;">
+      <button class="chip ${studyMode==='all'?'blue':''}" onclick="setMode('all')">전체보기</button>
+      <button class="chip ${studyMode==='en'?'blue':''}" onclick="setMode('en')">영어만</button>
+      <button class="chip ${studyMode==='kr'?'blue':''}" onclick="setMode('kr')">영작연습</button>
+      <button class="chip ${studyMode==='blind'?'blue':''}" onclick="setMode('blind')">완전암기</button>
+    </div>
+
+    <button class="btn btn-outline" style="margin-bottom:20px; border-color:var(--accent); color:var(--accent);" onclick="speak(curPs.text)">▶ 전체 문장 듣기</button>
+
+    <div class="study-list">
+      ${enLines.map((en, i) => `
+        <div class="card study-line" onclick="toggleLine(this)">
+          <div class="fb" style="margin-bottom:8px;">
+            <span style="font-size:0.65rem; font-weight:800; color:var(--text3);">SENTENCE ${i+1}</span>
+            <span onclick="event.stopPropagation(); speak('${en.replace(/'/g, "\\'")}')" style="cursor:pointer;">🔊</span>
+          </div>
+          <p class="en-txt ${studyMode==='kr'||studyMode==='blind'?'blurred':''}">${en}</p>
+          <p class="kr-txt ${studyMode==='en'||studyMode==='blind'?'blurred':''}" style="display:${studyMode==='en'?'none':'block'}">
+            ${krLines[i] || ''}
+          </p>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function setMode(m) { studyMode = m; renderStudyPage(); }
+function toggleLine(el) { el.querySelectorAll('.blurred').forEach(t => t.classList.toggle('blurred')); el.classList.toggle('on'); }
+
+// --- TTS ---
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const uttr = new SpeechSynthesisUtterance(text);
+  uttr.lang = 'en-US';
+  uttr.rate = 0.9;
+  window.speechSynthesis.speak(uttr);
+}
+
+// --- MODAL HELPERS ---
+function openModal() {
+  const bg = document.getElementById('modal-bg');
+  const m = document.getElementById('modal');
+  bg.style.display = 'flex';
+  setTimeout(() => m.classList.add('show'), 10);
+}
+function closeModal(e) {
+  if(e && e.target.id !== 'modal-bg') return;
+  const m = document.getElementById('modal');
+  m.classList.remove('show');
+  setTimeout(() => document.getElementById('modal-bg').style.display = 'none', 300);
+}
+</script>
+</body>
+</html>
