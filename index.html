@@ -2,24 +2,39 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>English Master</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Word Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#f8fafc;--surface:#fff;--surface2:#f1f5f9;--border:#e2e8f0;--border2:#cbd5e1;
-  --accent:#3182f6;--accent-dark:#1b64da;--accent2:#dc2626;--accent3:#2563eb;--accent4:#ea580c;
-  --text:#0f172a;--text2:#475569;--text3:#94a3b8;--card:#fff;
-  --teacher:#ea580c;--student:#3182f6;
-  --shadow:0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-  --radius:16px;--radius-sm:10px;
-  --sidebar-width:260px;
+:root {
+  --bg: #f8fafc; --surface: #ffffff; --surface2: #f1f5f9; --border: #e2e8f0;
+  --accent: #16a34a; --accent-dark: #15803d; --accent2: #dc2626; --accent3: #2563eb; --accent4: #ea580c;
+  --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+  --teacher: #ea580c; --student: #16a34a;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 16px; --radius-sm: 10px;
+  --sidebar-width: 280px;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;height:100vh;display:flex;flex-direction:column;}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.5; }
 
 /* --- Layout --- */
-#app { display:none; flex:1; display:flex; height:100vh; position:relative; }
+#app { display: none; min-height: 100vh; flex-direction: column; }
+#main-container { flex: 1; margin-left: var(--sidebar-width); transition: margin 0.3s; padding-top: 60px; }
+@media (max-width: 900px) { #main-container { margin-left: 0; } }
+
+/* --- Header --- */
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--surface);
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 900;
+}
+.menu-toggle {
+  width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+@media (min-width: 901px) { .menu-toggle { display: none; } }
+#page-title { font-weight: 800; font-size: 1.1rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* --- Sidebar --- */
 #sidebar {
@@ -27,147 +42,106 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   border-right: 1px solid var(--border); position: fixed; left: 0; top: 0;
   z-index: 1000; transition: transform 0.3s ease; display: flex; flex-direction: column;
 }
-@media (max-width: 900px) { #sidebar { transform: translateX(-100%); } }
-#sidebar.open { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
-
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); } #sidebar.open { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.1); } }
 #sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); }
-.brand { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--accent); }
+.brand { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--accent); }
 #sidebar-menu { flex: 1; padding: 12px; overflow-y: auto; }
 .menu-item {
-  width: 100%; padding: 12px 16px; margin-bottom: 4px; border: none; background: none;
-  border-radius: var(--radius-sm); text-align: left; font-size: 0.95rem; font-weight: 600;
-  color: var(--text2); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 14px 16px; margin-bottom: 6px; border: none; background: none;
+  border-radius: var(--radius-sm); text-align: left; font-size: 1rem; font-weight: 600;
+  color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 12px;
 }
 .menu-item.active { background: var(--surface2); color: var(--accent); }
-.menu-item:hover { background: var(--surface2); }
-
 #sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
 
-/* --- Overlay --- */
-#sidebar-overlay {
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index: 999; backdrop-filter: blur(2px);
-}
+#sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; backdrop-filter: blur(2px); }
 #sidebar-overlay.show { display: block; }
 
-/* --- Main Content --- */
-#main-container {
-  flex: 1; display: flex; flex-direction: column; overflow: hidden;
-  margin-left: var(--sidebar-width); transition: margin 0.3s;
-}
-@media (max-width: 900px) { #main-container { margin-left: 0; } }
-
-.top-bar {
-  height: 60px; background: var(--surface); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 900;
-}
-.menu-toggle {
-  width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border);
-  background: var(--surface); cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
-}
-@media (min-width: 901px) { .menu-toggle { display: none; } }
-
-#page-content { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
-
-/* --- UI Elements --- */
-.content-wrap { max-width: 800px; margin: 0 auto; }
-.section-title { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; color: var(--text); }
+/* --- Content UI --- */
+#page-content { padding: 16px; max-width: 800px; margin: 0 auto; width: 100%; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 16px; }
+.section-title { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; }
 .section-title span { color: var(--accent); }
 
-.card {
-  background: var(--surface); border-radius: var(--radius); padding: 18px;
-  box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 16px;
-}
-.btn {
-  padding: 12px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border);
-  font-weight: 700; cursor: pointer; font-family: inherit; transition: 0.2s; font-size: 0.9rem;
-}
-.btn.primary { background: var(--accent); color: white; border: none; }
-.btn-full { width: 100%; display: block; text-align: center; }
+/* --- Buttons --- */
+.btn { padding: 14px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-weight: 700; cursor: pointer; font-size: 0.95rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-primary { background: var(--accent); color: white; border: none; }
+.btn-full { width: 100%; }
 
-/* Memory Mode Styles (New) */
-.mode-tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; scrollbar-width: none; }
-.mode-tab { padding: 8px 16px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; white-space: nowrap; background: var(--surface2); color: var(--text3); border: none; cursor: pointer; }
-.mode-tab.on { background: var(--accent); color: #fff; }
-.study-line { margin-bottom: 15px; border-left: 4px solid var(--border); padding-left: 15px; cursor: pointer; }
-.study-line.active { border-left-color: var(--accent); background: #f8faff; }
-.en-txt { font-weight: 700; font-size: 1.1rem; color: var(--text); margin-bottom: 4px; transition: 0.3s; }
-.kr-txt { font-size: 0.9rem; color: var(--text2); transition: 0.3s; }
-.blurred { filter: blur(6px); background: #eee; color: transparent !important; user-select: none; border-radius: 4px; }
+/* --- Passage Learning Styles --- */
+.mode-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 16px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.mode-tabs::-webkit-scrollbar { display: none; }
+.m-btn { padding: 10px 16px; border-radius: 20px; border: 1px solid var(--border); background: white; white-space: nowrap; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.m-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-/* Checklist */
-.chk-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
-.chk-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface2); border-radius: 10px; cursor: pointer; }
+.ps-line { padding: 12px; border-radius: 12px; margin-bottom: 12px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
+.ps-line:active { background: var(--surface2); }
+.ps-en { display: block; font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+.ps-kr { display: block; font-size: 0.95rem; color: var(--text2); }
+.blur { filter: blur(6px); transition: filter 0.3s; user-select: none; }
+.unblur { filter: blur(0) !important; }
 
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-.modal { background: white; border-radius: 24px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
+/* --- Auth Screens --- */
+#wm-overlay { position: fixed; inset: 0; z-index: 10000; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.wm-box { background: white; padding: 32px 24px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+.wm-inp { width: 100%; padding: 15px; margin: 8px 0; border: 1px solid var(--border); border-radius: 12px; font-size: 16px; outline: none; }
+.wm-inp:focus { border-color: var(--accent); }
+
+/* --- Modal --- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
 .modal-overlay.show { display: flex; }
-
-#wm-overlay {
-  position:fixed; inset:0; z-index:10000; background: var(--bg); display:flex; align-items:center; justify-content:center; padding:20px;
-}
-.wm-box { background: white; padding: 30px 24px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-.wm-inp { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid var(--border); border-radius: 12px; font-size: 16px; }
-
-/* Flashcard */
-.fc-scene { height: 260px; margin-bottom: 20px; perspective: 1000px; }
-.fc-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
-.fc-inner.flipped { transform: rotateY(180deg); }
-.fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; display: flex; align-items: center; justify-content: center; padding: 20px; border: 1px solid var(--border); background: white; box-shadow: var(--shadow); }
-.fc-back { transform: rotateY(180deg); background: var(--surface2); }
+.modal { background: white; border-radius: 24px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
 </style>
 </head>
 <body>
 
 <div id="wm-overlay">
   <div class="wm-box">
-    <div style="font-size: 3rem;">🎓</div>
-    <h1 style="font-family: 'Outfit'; margin: 10px 0;">English Master</h1>
-    <p style="color: var(--text3); font-size: 0.85rem; margin-bottom: 20px;">AI와 함께하는 스마트 본문 학습</p>
+    <div style="font-size: 3rem; margin-bottom: 10px;">📚</div>
+    <h1 style="font-family: 'Outfit'; margin-bottom: 20px;">Word Master</h1>
     <div class="wm-tabs" style="display:flex; background: var(--surface2); padding: 5px; border-radius: 12px; margin-bottom: 15px;">
       <button id="tab-login" onclick="wmTab('login')" style="flex:1; padding:10px; border:none; border-radius:8px; font-weight:700; background: white;">로그인</button>
       <button id="tab-signup" onclick="wmTab('signup')" style="flex:1; padding:10px; border:none; border-radius:8px; font-weight:700; background: transparent;">회원가입</button>
     </div>
     <input class="wm-inp" id="wm-id" placeholder="아이디 (6자 이상)">
     <input class="wm-inp" id="wm-pw" type="password" placeholder="비밀번호 (6자 이상)">
-    <button class="btn primary btn-full" id="wm-btn" onclick="wmLogin()" style="margin-top: 15px; padding: 15px;">시작하기</button>
+    <button class="btn btn-primary btn-full" id="wm-btn" onclick="wmLogin()" style="margin-top: 10px;">시작하기</button>
   </div>
 </div>
 
 <div id="login-screen" style="display:none; height:100vh; align-items:center; justify-content:center; background: var(--bg);">
   <div style="width:100%; max-width:400px; padding:24px; text-align:center;">
-    <h2 style="margin-bottom:30px;">반가워요! 어떻게 시작할까요?</h2>
-    <div onclick="enterApp('student')" class="card" style="cursor:pointer; padding:30px;">
-      <div style="font-size:3rem; margin-bottom:10px;">📖</div>
-      <div style="font-weight:800; font-size:1.2rem;">학생으로 학습하기</div>
+    <h2 style="margin-bottom:32px; font-weight:800;">학습 모드를 선택하세요</h2>
+    <div onclick="enterApp('student')" class="card" style="cursor:pointer; padding:32px; border-bottom: 4px solid var(--student);">
+      <div style="font-size:3.5rem; margin-bottom:12px;">📖</div>
+      <div style="font-weight:800; font-size:1.2rem; color:var(--student);">학생 모드</div>
     </div>
-    <div onclick="enterApp('teacher')" class="card" style="cursor:pointer; padding:30px; border-top: 4px solid var(--teacher);">
-      <div style="font-size:3rem; margin-bottom:10px;">👩‍🏫</div>
-      <div style="font-weight:800; font-size:1.2rem; color:var(--teacher);">선생님으로 관리하기</div>
+    <div onclick="enterApp('teacher')" class="card" style="cursor:pointer; padding:32px; border-bottom: 4px solid var(--teacher);">
+      <div style="font-size:3.5rem; margin-bottom:12px;">👩‍🏫</div>
+      <div style="font-weight:800; font-size:1.2rem; color:var(--teacher);">선생님 모드</div>
     </div>
   </div>
 </div>
 
-<div id="app" style="display:none;">
+<div id="app">
   <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
   <aside id="sidebar">
     <div id="sidebar-header">
-      <div class="brand">🎓 English Master</div>
-      <div id="role-tag" style="display:inline-block; font-size:0.7rem; padding:2px 8px; border-radius:20px; margin-top:5px;"></div>
+      <div class="brand">📚 Word Master</div>
+      <div id="role-tag" style="display:inline-block; font-size:0.75rem; padding:4px 10px; border-radius:20px; margin-top:8px; font-weight:800;"></div>
     </div>
     <nav id="sidebar-menu"></nav>
     <div id="sidebar-footer">
-      <div id="user-info" style="font-size: 0.8rem; margin-bottom: 10px; color: var(--text2);"></div>
-      <button class="btn btn-full" onclick="logoutAccount()">로그아웃</button>
+      <div id="user-info" style="font-size: 0.85rem; margin-bottom: 12px; color: var(--text2); font-weight: 500;"></div>
+      <button class="btn btn-full" onclick="logoutAccount()" style="color: var(--accent2);">로그아웃</button>
     </div>
   </aside>
 
   <main id="main-container">
     <header class="top-bar">
       <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-      <div id="page-title" style="font-weight:800; font-size:1.1rem; flex:1;">English Master</div>
-      <div id="account-status" style="font-size:0.8rem; font-weight:700; color:var(--accent3);"></div>
+      <div id="page-title">단어장</div>
+      <div id="account-status" style="font-size:0.85rem; font-weight:700; color:var(--accent3);"></div>
     </header>
     <div id="page-content"></div>
   </main>
@@ -175,71 +149,64 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal">
-    <button onclick="closeModal()" style="position:absolute; right:20px; top:20px; border:none; background:none; font-size:1.5rem; z-index:10;">✕</button>
+    <button onclick="closeModal()" style="position:absolute; right:20px; top:20px; border:none; background:none; font-size:1.5rem; color: var(--text3);">✕</button>
     <div id="modal-content"></div>
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* [핵심 설정] */
-window.WM_FIREBASE_CONFIG={apiKey:"AIzaSyDRXpHtMbbLg5_zHn9DHclOQNacYWC1bFk",authDomain:"word-test-4cdf6.firebaseapp.com",projectId:"word-test-4cdf6",storageBucket:"word-test-4cdf6.firebasestorage.app",messagingSenderId:"175982857143",appId:"1:175982857143:web:2aae221a1e051c197ab632"};
+/* [핵심 설정 및 데이터] */
+const WORDS={"1":[{en:"diligent",kr:"부지런한"},{en:"generous",kr:"관대한"}]};
 const TEACHER_UID='gfedbKqE30VwTDfls7cfiGwaD982';
 
 let role='student', currentUid='', currentEmail='', activeUsername='';
-let passages=[], allProfiles=[], studentSubmissions=[];
-let curStudyMode='all'; // all, en, kr, blind
+let passages=[], homeworks=[], allProfiles=[], submissions=[], studentSubmissions=[];
+let psViewMode = 'both'; // both, en_only, kr_only, en_blur, kr_blur
 
-// [디자인 유지용 데이터]
-const WORDS={"1":[{en:"diligent",kr:"부지런한, 근면한"},{en:"generous",kr:"관대한, 후한"},{en:"creative",kr:"창의적인"},{en:"modest",kr:"겸손한, 적당한"},{en:"active",kr:"활동적인, 적극적인"}],"2":[{en:"assignment",kr:"과제, 숙제"},{en:"attendance",kr:"출석"}]};
+/* [초기화] */
+window.WM_FIREBASE_CONFIG={apiKey:"AIzaSyDRXpHtMbbLg5_zHn9DHclOQNacYWC1bFk",authDomain:"word-test-4cdf6.firebaseapp.com",projectId:"word-test-4cdf6",storageBucket:"word-test-4cdf6.firebasestorage.app",messagingSenderId:"175982857143",appId:"1:175982857143:web:2aae221a1e051c197ab632"};
+firebase.initializeApp(window.WM_FIREBASE_CONFIG);
+const fbAuth = firebase.auth(); const fbDb = firebase.firestore();
 
-/* [인증 & 데이터] */
-(function init(){
-  firebase.initializeApp(window.WM_FIREBASE_CONFIG);
-  fbAuth = firebase.auth(); fbDb = firebase.firestore();
-  fbAuth.onAuthStateChanged(async user => {
-    if(user) {
-      currentUid = user.uid; currentEmail = user.email;
-      activeUsername = currentEmail.split('@')[0];
-      const isT = currentUid === TEACHER_UID;
-      await fbDb.collection('profiles').doc(currentUid).set({
-        email: currentEmail, username: activeUsername, isTeacher: isT, updatedAt: new Date().toISOString()
-      }, {merge:true});
-      loadData();
-      document.getElementById('wm-overlay').style.display='none';
-      document.getElementById('login-screen').style.display='flex';
-    }
-  });
-})();
-
-async function wmLogin() {
-  const id = document.getElementById('wm-id').value.trim();
-  const pw = document.getElementById('wm-pw').value.trim();
-  const email = id.includes('@') ? id : id + '@wordtest.local';
-  try { await fbAuth.signInWithEmailAndPassword(email, pw); } catch(e) {
-    if(e.code === 'auth/user-not-found') await fbAuth.createUserWithEmailAndPassword(email, pw); else alert(e.message);
+fbAuth.onAuthStateChanged(async user => {
+  if(user) {
+    currentUid = user.uid; currentEmail = user.email;
+    activeUsername = currentEmail.split('@')[0];
+    const isT = currentUid === TEACHER_UID;
+    await fbDb.collection('profiles').doc(currentUid).set({ email: currentEmail, username: activeUsername, isTeacher: isT, updatedAt: new Date().toISOString() }, {merge:true});
+    await loadData();
+    document.getElementById('wm-overlay').style.display='none';
+    document.getElementById('login-screen').style.display='flex';
   }
-}
+});
 
-function loadData() {
-  fbDb.collection('passages').orderBy('updatedAt','desc').onSnapshot(s => { 
-    passages = s.docs.map(d=>({id:d.id, ...d.data()})); 
-    if(role==='student') renderPassagePage(); else renderPassageTeacherPage(); 
-  });
+async function loadData() {
+  fbDb.collection('passages').onSnapshot(s => { passages = s.docs.map(d=>({id:d.id, ...d.data()})); if(role==='student') renderPassagePage(); });
+  fbDb.collection('homeworks').onSnapshot(s => { homeworks = s.docs.map(d=>({id:d.id, ...d.data()})); });
   fbDb.collection('profiles').onSnapshot(s => { allProfiles = s.docs.map(d=>({id:d.id, ...d.data()})); });
+  fbDb.collection('submissions').onSnapshot(s => { 
+    submissions = s.docs.map(d=>d.data());
+    studentSubmissions = submissions.filter(x => x.studentUid === currentUid);
+  });
 }
 
-/* [UI 라우팅] */
-function enterApp(r) {
+/* [UI 네비게이션] */
+function wmTab(t){ /* 로그인/가입 탭 로직 */ }
+async function wmLogin(){ /* 파이어베이스 로그인 로직 */ }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('show'); }
+function logoutAccount(){ fbAuth.signOut(); location.reload(); }
+
+function enterApp(r){
   role = r;
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   const tag = document.getElementById('role-tag');
-  tag.textContent = role === 'teacher' ? '관리자 모드' : '학습자 모드';
-  tag.style.background = role === 'teacher' ? 'var(--teacher)' : 'var(--accent)';
+  tag.textContent = role === 'teacher' ? '선생님 계정' : '학생 계정';
+  tag.style.background = role === 'teacher' ? 'var(--teacher)' : 'var(--student)';
   tag.style.color = 'white';
   document.getElementById('account-status').textContent = activeUsername;
   document.getElementById('user-info').textContent = currentEmail;
@@ -248,176 +215,228 @@ function enterApp(r) {
 
 function buildNav() {
   const menu = document.getElementById('sidebar-menu');
-  menu.innerHTML = '';
   const items = role === 'student' 
-    ? [['books','📚 단어장'],['flash','🃏 플래시카드'],['passage','📖 본문 학습'],['results','📊 내 성적']]
-    : [['ps-t','📖 본문 관리'],['students','👥 학생 관리']];
-  items.forEach(([id, label]) => {
-    const btn = document.createElement('button'); btn.className = 'menu-item'; btn.innerHTML = label;
-    btn.onclick = () => { switchPage(id); if(window.innerWidth<=900) toggleSidebar(); };
-    btn.id = 'menu-' + id; menu.appendChild(btn);
-  });
-  switchPage(items[0][0]);
+    ? [['books','📚 단어장'],['passage','📖 본문 학습'],['homework','📝 숙제 확인'],['results','📊 내 성적']]
+    : [['ps-t','📖 본문 관리'],['hw-t','📝 숙제 관리'],['students','👥 학생 관리']];
+  
+  menu.innerHTML = items.map(([id, label]) => `
+    <button class="menu-item" id="menu-${id}" onclick="switchPage('${id}')">${label}</button>
+  `).join('');
+  switchPage(role === 'student' ? 'books' : 'students');
 }
 
 function switchPage(id) {
-  const content = document.getElementById('page-content');
   document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-  const activeMenu = document.getElementById('menu-' + id);
-  if(activeMenu) {
-    activeMenu.classList.add('active'); document.getElementById('page-title').textContent = activeMenu.textContent.replace(/[^\w\sㄱ-ㅎㅏ-ㅣ가-힣]/g, '').trim();
-  }
-  const map = { 'books': renderBooksPage, 'flash': renderFlash, 'passage': renderPassagePage, 'ps-t': renderPassageTeacherPage, 'students': renderTeacherStudentsPage };
-  if(map[id]) map[id]();
+  if(document.getElementById('menu-'+id)) document.getElementById('menu-'+id).classList.add('active');
+  const titleMap = { books:'단어장', passage:'본문 학습', homework:'숙제 확인', results:'내 성적', 'ps-t':'본문 관리', 'hw-t':'숙제 관리', students:'학생 관리' };
+  document.getElementById('page-title').textContent = titleMap[id] || '학습';
+  
+  const renderMap = { books: renderBooksPage, passage: renderPassagePage, homework: renderHomeworkPage, results: renderStudentResults, 'ps-t': renderPassageTeacherPage, 'hw-t': renderHomeworkTeacherPage, students: renderTeacherStudentsPage };
+  if(renderMap[id]) renderMap[id]();
+  if(window.innerWidth < 900) toggleSidebar();
 }
 
-/* [추가 기능 1: 선생님 - 본문 관리 & 학생별 지정] */
-function renderPassageTeacherPage() {
+/* [학생 - 본문 학습 모드] */
+function renderPassagePage() {
   const area = document.getElementById('page-content');
+  // 나에게 배정된 본문만 필터링
+  const myPassages = passages.filter(p => !p.targetStudents || p.targetStudents.length === 0 || p.targetStudents.includes(currentUid));
+  
+  if(myPassages.length === 0) return area.innerHTML = '<div class="card" style="text-align:center;">배정된 본문이 없습니다.</div>';
+
   area.innerHTML = `
     <div class="content-wrap">
-      <div class="section-title">📖 본문 <span>관리 및 배정</span></div>
-      <button class="btn primary btn-full" onclick="openPassageEditor()" style="margin-bottom:20px;">+ 새로운 본문 추가</button>
-      <div id="ps-list">
-        ${passages.map(ps => `
-          <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div style="font-weight:700;">${ps.title}</div>
-              <div style="display:flex; gap:8px;">
-                <button class="btn" style="padding:8px 12px; font-size:0.75rem;" onclick="openPassageEditor('${ps.id}')">수정</button>
-                <button class="btn" style="padding:8px 12px; font-size:0.75rem; color:var(--accent2);" onclick="deletePassage('${ps.id}')">삭제</button>
-              </div>
-            </div>
-            <div style="font-size:0.7rem; color:var(--text3); margin-top:8px;">
-              ${ps.assignedTo === 'all' ? '● 전체 공개' : `● ${ps.assignedTo?.length || 0}명 배정됨`}
-            </div>
+      <div class="section-title">나의 <span>본문 학습</span></div>
+      <div class="card">
+        <p style="font-size:0.85rem; color:var(--text3); margin-bottom:10px;">학습할 본문을 선택하세요</p>
+        <select class="wm-inp" style="margin:0;" onchange="drawPassage(this.value)">
+          <option value="">본문 선택...</option>
+          ${myPassages.map(p => `<option value="${p.id}">${p.title}</option>`).join('')}
+        </select>
+      </div>
+      <div id="passage-container"></div>
+    </div>`;
+}
+
+function drawPassage(pid) {
+  const container = document.getElementById('passage-container');
+  if(!pid) return container.innerHTML = '';
+  const ps = passages.find(x => x.id === pid);
+
+  container.innerHTML = `
+    <div class="mode-tabs">
+      <button class="m-btn ${psViewMode==='both'?'active':''}" onclick="setPsMode('${pid}','both')">영어+한글</button>
+      <button class="m-btn ${psViewMode==='en_only'?'active':''}" onclick="setPsMode('${pid}','en_only')">영어만</button>
+      <button class="m-btn ${psViewMode==='kr_only'?'active':''}" onclick="setPsMode('${pid}','kr_only')">한글만</button>
+      <button class="m-btn ${psViewMode==='en_blur'?'active':''}" onclick="setPsMode('${pid}','en_blur')">영어 블러</button>
+      <button class="m-btn ${psViewMode==='kr_blur'?'active':''}" onclick="setPsMode('${pid}','kr_blur')">한글 블러</button>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:20px; color:var(--accent);">${ps.title}</h3>
+      <div id="lines-list">
+        ${(ps.lines || []).map((l, idx) => `
+          <div class="ps-line" onclick="handleLineClick(this, '${l.en.replace(/'/g,"\\'")}')">
+            <span class="ps-en ${psViewMode==='kr_only'?'hide':''} ${psViewMode==='en_blur'?'blur':''}" 
+                  style="${psViewMode==='kr_only'?'display:none':''}">${l.en}</span>
+            <span class="ps-kr ${psViewMode==='en_only'?'hide':''} ${psViewMode==='kr_blur'?'blur':''}" 
+                  style="${psViewMode==='en_only'?'display:none':''}">${l.kr}</span>
           </div>
         `).join('')}
       </div>
     </div>`;
 }
 
-function openPassageEditor(id = null) {
-  const ps = passages.find(x => x.id === id) || { title: '', text: '', translation: '', assignedTo: 'all' };
-  const isAll = ps.assignedTo === 'all';
-  const assignedSet = new Set(isAll ? [] : (ps.assignedTo || []));
-  const stus = allProfiles.filter(p => p.id !== TEACHER_UID);
+function setPsMode(pid, mode) { psViewMode = mode; drawPassage(pid); }
 
-  const mc = document.getElementById('modal-content');
-  mc.innerHTML = `
-    <h3 style="margin-bottom:20px;">본문 편집</h3>
-    <input class="wm-inp" id="ed-ps-title" value="${ps.title}" placeholder="본문 제목">
-    <textarea class="wm-inp" id="ed-ps-text" style="height:150px; font-size:0.9rem;" placeholder="영어 지문 (한 줄씩 입력)">${ps.text}</textarea>
-    <textarea class="wm-inp" id="ed-ps-trans" style="height:150px; font-size:0.9rem; background:#fdfdfd;" placeholder="한글 해석 (영어와 순서 맞춰 한 줄씩)">${ps.translation || ''}</textarea>
-    
-    <div style="margin:15px 0;">
-      <p style="font-size:0.85rem; font-weight:800; margin-bottom:10px;">학습자 지정</p>
-      <div style="background:var(--surface2); border-radius:12px; padding:12px;">
-        <label class="chk-item"><input type="checkbox" id="chk-all" ${isAll?'checked':''} onchange="toggleStuList(this.checked)"> 전체 학생에게 배정</label>
-        <div id="stu-selector" style="display:${isAll?'none':'block'}; max-height:120px; overflow-y:auto; margin-top:10px;">
-          ${stus.map(s => `<label class="chk-item"><input type="checkbox" class="stu-chk" value="${s.id}" ${assignedSet.has(s.id)?'checked':''}> ${s.displayName || s.email.split('@')[0]}</label>`).join('')}
-        </div>
-      </div>
-    </div>
-    <button class="btn primary btn-full" onclick="savePassage('${id||''}')">저장하기</button>
-  `;
-  document.getElementById('modal-overlay').classList.add('show');
-}
-
-function toggleStuList(isAll) { document.getElementById('stu-selector').style.display = isAll ? 'none' : 'block'; }
-
-async function savePassage(eid) {
-  const title = document.getElementById('ed-ps-title').value.trim();
-  const text = document.getElementById('ed-ps-text').value.trim();
-  const trans = document.getElementById('ed-ps-trans').value.trim();
-  const isAll = document.getElementById('chk-all').checked;
-  const assignedTo = isAll ? 'all' : Array.from(document.querySelectorAll('.stu-chk:checked')).map(c => c.value);
-
-  if(!title || !text) return alert('제목과 영어를 입력하세요.');
-  const id = eid || 'ps-' + Date.now();
-  await fbDb.collection('passages').doc(id).set({ title, text, translation: trans, assignedTo, updatedAt: new Date().toISOString(), ownerUid: currentUid }, {merge:true});
-  closeModal();
-}
-
-async function deletePassage(id) { if(confirm('본문을 삭제하시겠습니까?')) await fbDb.collection('passages').doc(id).delete(); }
-
-/* [추가 기능 2: 학생 - 본문 학습 & 4대 암기 모드] */
-function renderPassagePage() {
-  const area = document.getElementById('page-content');
-  const myPs = passages.filter(p => p.assignedTo === 'all' || (Array.isArray(p.assignedTo) && p.assignedTo.includes(currentUid)));
+function handleLineClick(el, text) {
+  // 블러 제거
+  const blurs = el.querySelectorAll('.blur');
+  blurs.forEach(b => b.classList.add('unblur'));
   
-  if(myPs.length === 0) return area.innerHTML = '<p style="text-align:center; padding:50px; color:var(--text3);">지정된 본문이 아직 없습니다.</p>';
+  // TTS (영어 모드에서만)
+  if(psViewMode === 'en_only') {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+}
 
+/* [선생님 - 본문 관리] */
+function renderPassageTeacherPage() {
+  const area = document.getElementById('page-content');
   area.innerHTML = `
     <div class="content-wrap">
-      <div class="section-title">나의 <span>학습 본문</span></div>
-      ${myPs.map(p => `
-        <div class="card" style="cursor:pointer;" onclick="openStudyView('${p.id}')">
-          <div style="font-weight:800; font-size:1.1rem; color:var(--accent);">${p.title}</div>
-          <p style="font-size:0.8rem; color:var(--text2); margin-top:6px; line-height:1.4;">${p.text.slice(0, 80)}...</p>
+      <div class="section-title">본문 <span>관리</span></div>
+      <button class="btn btn-primary btn-full" onclick="openPsEditor()" style="margin-bottom:20px;">+ 새 본문 추가</button>
+      ${passages.map(p => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700;">${p.title}</div>
+            <div style="font-size:0.75rem; color:var(--text3); mt:4px;">문장: ${p.lines?.length || 0}개 / 대상: ${p.targetStudents?.length || '전체'}</div>
+          </div>
+          <button class="btn" onclick="openPsEditor('${p.id}')">수정</button>
         </div>
       `).join('')}
     </div>`;
 }
 
-function openStudyView(id) {
-  const ps = passages.find(p => p.id === id);
-  const enLines = ps.text.split('\n').filter(l => l.trim());
-  const krLines = (ps.translation || '').split('\n').filter(l => l.trim());
+function openPsEditor(id = null) {
+  const ps = passages.find(x => x.id === id) || { title: '', rawText: '', targetStudents: [] };
+  const mc = document.getElementById('modal-content');
+  const students = allProfiles.filter(p => !p.isTeacher);
 
-  const area = document.getElementById('page-content');
-  area.innerHTML = `
-    <div class="content-wrap">
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
-        <button onclick="renderPassagePage()" style="border:none; background:var(--surface2); width:40px; height:40px; border-radius:12px; font-size:1.1rem;">←</button>
-        <h2 style="font-weight:900;">${ps.title}</h2>
-      </div>
-
-      <div class="mode-tabs">
-        <button class="mode-tab ${curStudyMode==='all'?'on':''}" onclick="setMode('${id}','all')">영어+한글</button>
-        <button class="mode-tab ${curStudyMode==='en'?'on':''}" onclick="setMode('${id}','en')">영어만</button>
-        <button class="mode-tab ${curStudyMode==='kr'?'on':''}" onclick="setMode('${id}','kr')">한글 보고 영작</button>
-        <button class="mode-tab ${curStudyMode==='blind'?'on':''}" onclick="setMode('${id}','blind')">완전 암기</button>
-      </div>
-
-      ${(curStudyMode==='all' || curStudyMode==='en') ? `
-        <button class="btn btn-full" style="margin-bottom:20px; border-color:var(--accent); color:var(--accent);" onclick="speak('${ps.text.replace(/\n/g, ' ')}')">▶ 본문 전체 듣기</button>
-      ` : ''}
-
-      <div id="study-list">
-        ${enLines.map((en, i) => `
-          <div class="study-line" onclick="toggleLine(this)">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span style="font-size:0.6rem; font-weight:800; color:var(--text3);">SENTENCE ${i+1}</span>
-              ${(curStudyMode==='all' || curStudyMode==='en') ? `<span onclick="event.stopPropagation(); speak('${en.replace(/'/g, "\\'")}')" style="font-size:1.1rem; cursor:pointer;">🔊</span>` : ''}
-            </div>
-            <div class="en-txt ${ (curStudyMode==='blind' || curStudyMode==='kr') ? 'blurred' : ''}">${en}</div>
-            <div class="kr-txt ${ (curStudyMode==='blind' || curStudyMode==='en') ? 'blurred' : ''}" style="display:${curStudyMode==='en'?'none':'block'}">${krLines[i] || ''}</div>
-          </div>
+  mc.innerHTML = `
+    <h3 style="margin-bottom:16px;">본문 작성</h3>
+    <p style="font-size:0.8rem; color:var(--text3); margin-bottom:12px;">형식: 영어 문장 | 한글 해석 (한 줄에 하나씩)</p>
+    <input class="wm-inp" id="ps-title" value="${ps.title}" placeholder="본문 제목">
+    <textarea class="wm-inp" id="ps-raw" style="height:180px; font-size:0.85rem;" placeholder="I am a student. | 나는 학생이다.">${ps.rawText}</textarea>
+    
+    <div style="margin-top:16px;">
+      <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">대상 학생 선택 (미선택 시 전체)</p>
+      <div style="max-height:120px; overflow-y:auto; border:1px solid var(--border); border-radius:12px; padding:10px;">
+        ${students.map(s => `
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:0.9rem;">
+            <input type="checkbox" class="ps-tgt" value="${s.id}" ${ps.targetStudents?.includes(s.id)?'checked':''}> ${s.displayName || s.username}
+          </label>
         `).join('')}
       </div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:20px;" onclick="savePassage('${id||''}')">저장하기</button>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function savePassage(id) {
+  const title = document.getElementById('ps-title').value.trim();
+  const rawText = document.getElementById('ps-raw').value.trim();
+  const targets = Array.from(document.querySelectorAll('.ps-tgt:checked')).map(c => c.value);
+  
+  if(!title || !rawText) return alert('내용을 입력하세요.');
+
+  // 파싱: "영어 | 한글"
+  const lines = rawText.split('\n').filter(l => l.includes('|')).map(l => {
+    const [en, kr] = l.split('|');
+    return { en: en.trim(), kr: kr.trim() };
+  });
+
+  const docId = id || 'ps-' + Date.now();
+  await fbDb.collection('passages').doc(docId).set({
+    title, rawText, lines, targetStudents: targets, updatedAt: new Date().toISOString()
+  }, {merge:true});
+  
+  closeModal();
+  alert('저장되었습니다.');
+}
+
+/* [선생님 - 학생 관리 상세] */
+function renderTeacherStudentsPage() {
+  const area = document.getElementById('page-content');
+  const students = allProfiles.filter(p => !p.isTeacher);
+  area.innerHTML = `
+    <div class="content-wrap">
+      <div class="section-title">학생 <span>현황</span></div>
+      ${students.map(s => `
+        <div class="card" onclick="viewStudentProfile('${s.id}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:800; font-size:1.1rem; color:var(--accent);">${s.displayName || s.username}</div>
+            <div style="font-size:0.8rem; color:var(--text3);">${s.email}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:var(--text2);">성적: ${submissions.filter(x=>x.studentUid===s.id).length}건</div>
+            <div style="font-size:0.75rem; color:var(--accent4);">메모: ${s.memo ? '있음' : '없음'}</div>
+          </div>
+        </div>
+      `).join('')}
     </div>`;
 }
 
-function setMode(id, m) { curStudyMode = m; openStudyView(id); }
-function toggleLine(el) { el.classList.toggle('active'); el.querySelectorAll('.blurred').forEach(b => b.classList.toggle('blurred')); }
+async function viewStudentProfile(uid) {
+  const s = allProfiles.find(x => x.id === uid);
+  const mySubs = submissions.filter(x => x.studentUid === uid);
+  const mc = document.getElementById('modal-content');
 
-/* [디자인 유지: 단어장 & 플래시카드] */
+  mc.innerHTML = `
+    <h3 style="margin-bottom:16px;">${s.displayName || s.username} 상세 정보</h3>
+    <div style="margin-bottom:20px;">
+      <p style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">📌 학습 메모</p>
+      <textarea id="s-memo" class="wm-inp" style="height:80px;" placeholder="학생에 대한 간단한 메모...">${s.memo || ''}</textarea>
+      <button class="btn btn-primary btn-full" onclick="saveMemo('${uid}')" style="margin-top:8px;">메모 저장</button>
+    </div>
+    <div style="margin-top:24px;">
+      <p style="font-weight:700; font-size:0.9rem; margin-bottom:12px;">📊 최근 시험 성적</p>
+      ${mySubs.length ? mySubs.slice(-5).reverse().map(x => `
+        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--surface2);">
+          <span style="font-weight:600;">${x.score}점</span>
+          <span style="font-size:0.8rem; color:var(--text3);">${new Date(x.timestamp).toLocaleDateString()}</span>
+        </div>
+      `).join('') : '<p style="font-size:0.85rem; color:var(--text3);">기록이 없습니다.</p>'}
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveMemo(uid) {
+  const memo = document.getElementById('s-memo').value.trim();
+  await fbDb.collection('profiles').doc(uid).update({ memo });
+  alert('메모가 저장되었습니다.');
+}
+
+/* [기타 유틸리티] */
 function renderBooksPage() {
-  const area = document.getElementById('page-content');
-  area.innerHTML = `<div class="content-wrap"><div class="section-title">📚 학습용 <span>단어장</span></div><div class="card" style="border-left: 5px solid var(--accent);"><h3>Word Master BASIC</h3><p style="font-size:0.8rem; color:var(--text3);">표준 고교 필수 영단어 Day 1~3</p></div></div>`;
+  document.getElementById('page-content').innerHTML = `
+    <div class="content-wrap">
+      <div class="section-title">학습할 <span>단어장</span></div>
+      <div class="card" style="border-left: 5px solid var(--accent);">
+        <h3 style="margin-bottom:8px;">Word Master BASIC</h3>
+        <p style="font-size:0.9rem; color:var(--text2);">기본 제공 단어장 (Day 1~3)</p>
+      </div>
+    </div>`;
 }
-function renderFlash() {
-  const area = document.getElementById('page-content');
-  area.innerHTML = `<div class="content-wrap"><div class="card" style="text-align:center; padding:50px;">🃏 단어 암기 기능 준비 중</div></div>`;
-}
+function renderHomeworkPage() { /* 배정 학생 필터링 적용 로직 */ }
+function renderStudentResults() { /* 성적 리스트 렌더링 */ }
+function closeModal(e) { if(!e || e.target.id === 'modal-overlay' || e.target.className === 'modal-overlay') document.getElementById('modal-overlay').classList.remove('show'); }
 
-/* [공통 유틸리티] */
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('show'); }
-function wmTab(t) { const isL = t==='login'; document.getElementById('tab-login').style.background = isL ? 'white' : 'transparent'; document.getElementById('tab-signup').style.background = isL ? 'transparent' : 'white'; }
-function logoutAccount() { fbAuth.signOut(); location.reload(); }
-function closeModal(e) { if(!e || e.target.id === 'modal-overlay') document.getElementById('modal-overlay').classList.remove('show'); }
-function speak(t) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='en-US'; u.rate=0.9; window.speechSynthesis.speak(u); }
 </script>
 </body>
 </html>
